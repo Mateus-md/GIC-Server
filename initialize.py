@@ -1,4 +1,4 @@
-# (c) 2025 Mateus M. & Magnuss S.
+# (c) 2025 Mateus M. & Magnus S.
 #-- SOBRE ----------------------------------------------------------------
 '''
 
@@ -11,6 +11,18 @@
     O script deve ser executado apenas quando necessário e não é utilizado
     fora do uso de criação e verificação de um banco de dados.
 
+    Para usa-lo, primeiro certifique-se de que haja um banco de dados
+    MySQL criado e que as autenticações necessárias estejam presentes
+    dentro do arquivo .env localizado na raiz do projeto.
+    Em seguida, execute este script:
+
+    ```bash
+    python3 initialize.py
+    ```
+
+    Informe o nome do banco criado. Logo após, uma mensagem deve informar
+    que a estrutura do banco foi devidamente inicializada.
+
 '''
 #-- BIBLIOTECAS ----------------------------------------------------------
 import mysql.connector
@@ -19,7 +31,7 @@ from modules import *
 #-- MAIN -----------------------------------------------------------------
 def initialize(database_name:str) -> None:
     ''' Função principal - Cria um banco e suas tabelas '''
-    
+
     conn, cursor = cntConnectTo(database_name)
 
     try: # Cria novas tabelas
@@ -34,9 +46,9 @@ def initialize(database_name:str) -> None:
                             num_cpf         CHAR(14) PRIMARY KEY,
                             id_cliente      INTEGER NOT NULL,
                             FOREIGN KEY (id_cliente) REFERENCES gic_clientes(id_cliente)
-                        ); 
+                        );
                         CREATE TABLE IF NOT EXISTS gic_cnpj(
-                            num_cnpj        CHAR(18) PRIMARY KEY
+                            num_cnpj        CHAR(18) PRIMARY KEY,
                             id_cliente      INTEGER NOT NULL,
                             FOREIGN KEY (id_cliente) REFERENCES gic_clientes(id_cliente)
                         );
@@ -68,13 +80,12 @@ def initialize(database_name:str) -> None:
                             id_cliente      INTEGER NOT NULL,
                             data            DATE NOT NULL,
                             horario         TIME NOT NULL,
-                            valor_servico   FLOAT DEFAULT 0
-                            FOREIGN KEY (id_servico) REFERENCES gic_servicos(id_servico)
+                            valor_servico   FLOAT DEFAULT 0,
+                            FOREIGN KEY (id_servico) REFERENCES gic_servicos(id_servico),
                             FOREIGN KEY (id_cliente) REFERENCES gic_clientes(id_cliente)
                         )
                        """)
-        
-        conn.commit()
+        # conn.commit()
 
     except Exception as err:
         print(f"\33[31mErro inesperado: {err}\33[0m")
@@ -88,4 +99,9 @@ def initialize(database_name:str) -> None:
 #-------------------------------------------------------------------------
 if __name__ == "__main__":
     db = input("Nome do banco >> ")
-    if db: initialize(db)
+    try:
+      if db: initialize(db)
+      print("\33[32mA estrutura do banco foi criada!\33[0m")
+    except:
+      print("\33[31mUm erro ocorreu durante a inicialização\33[0m")
+      raise

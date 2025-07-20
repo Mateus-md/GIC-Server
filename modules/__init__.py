@@ -1,2 +1,2 @@
-# (c) 2025 Mateus M. & Magnuss S.
+# (c) 2025 Mateus M. & Magnus S.
 from .connector import cntConnectTo # prefixo: cnt

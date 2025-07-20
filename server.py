@@ -1,4 +1,4 @@
-# (c) 2025 Mateus M. & Magnuss S.
+# (c) 2025 Mateus M. & Magnus S.
 #-- SOBRE ----------------------------------------------------------------
 '''
 
@@ -9,7 +9,7 @@
 '''
 #-- BIBLIOTECAS ----------------------------------------------------------
 from modules import *
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
 import os
 
@@ -21,49 +21,49 @@ def is_valid(token:str) -> bool:
 
 def safe_execute(db_name:str, command:str) -> None:
     ''' Exectua  um comando SQL de forma segura
-    
+
     Args:
         db_name: O nome do banco de dados a ser acessado.
         command: Comando para ser executado.
 
     '''
-    
+
     conn, cursor = cntConnectTo(db_name)
 
     try:
-        command = conn.converter.escape(command)
+        #command = conn.converter.escape(command)
         cursor.execute(command)
         conn.commit()
     except Exception as err:
-        conn.roolback()
+        conn.rollback()
         raise HTTPException(status_code=500, detail=str(err))
     finally:
         cursor.close()
         conn.close()
-   
+
     return
 
 #-- REQUESTS -------------------------------------------------------------
 app = FastAPI()
 @app.get("/new_client")
-def add_client(token:str, db_name:str, nome:str, telefone:str) -> None:
+def add_client(token:str, db_name:str, nome_cliente:str, telefone:str) -> None:
 
     if not is_valid(token):
-        raise HTTPException(status_code=401, detail="Token inválido")
+      raise HTTPException(status_code=401, detail="Token inválido")
 
-    insert_command = """
+    insert_command = f"""
 
-    INSERT INTO gic_clientes (nome, telefone)
-    VALUES (%s, %s)
+    INSERT INTO gic_clientes (nome_cliente, telefone)
+    VALUES ("{nome_cliente}", "{telefone}")
 
-    """, (nome, telefone)
+    """
 
     safe_execute(db_name, command=insert_command)
 
     return {"message": "Novo cliente adicionado!"}
 
 @app.get("/new_vehicle")
-def add_vehicle() -> None:
+def add_vehicle(token:str, db_name:str) -> None:
     return
 
 #-------------------------------------------------------------------------
