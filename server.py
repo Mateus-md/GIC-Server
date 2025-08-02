@@ -9,7 +9,7 @@
 '''
 #-- BIBLIOTECAS ----------------------------------------------------------
 from modules import *
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Form, HTTPException
 from dotenv import load_dotenv
 import os
 
@@ -43,27 +43,51 @@ def safe_execute(db_name:str, command:str) -> None:
 
     return
 
-#-- REQUESTS -------------------------------------------------------------
-app = FastAPI()
-@app.get("/new_client")
-def add_client(token:str, db_name:str, nome_cliente:str, telefone:str) -> None:
+def decrypt( pipe:str = Form(...) ) -> dict:
+    ''' Transforma um pacote em um formato desejado '''
+    try:
+      package = encDecode(pipe)
+      data = cnvFormat(package)
+    except:
+      raise HTTPException(status_code=401, detail="Não autorizado!")
+    return data
 
-    if not is_valid(token):
-      raise HTTPException(status_code=401, detail="Token inválido")
+#-- REQUISIÇÕES ----------------------------------------------------------
+app = FastAPI()
+
+# Cadastro de clientes
+@app.post("/novo_cliente")
+async def add_client( pipe:str = Form(...) ) -> dict:
+    ''' Cadastra um novo cliente '''
+
+    data = decrypt(pipe)
+
+    if not is_valid( data["token"] ):
+      raise HTTPException(status_code=401, detail="Token inválido!")
 
     insert_command = f"""
-
-    INSERT INTO gic_clientes (nome_cliente, telefone)
-    VALUES ("{nome_cliente}", "{telefone}")
-
+      INSERT INTO gic_clientes (nome_cliente, telefone)
+      VALUES ("{data['nome_cliente']}", "{data['telefone']}")
     """
+    safe_execute(data["db_name"], command=insert_command)
 
-    safe_execute(db_name, command=insert_command)
+    return {"status_code":200,"message":"Novo cliente cadastrado!"}
 
-    return {"message": "Novo cliente adicionado!"}
+# Cadastro de serviços
+@app.post("/novo_serviço")
+async def add_service( pipe:str = Form(...) ) -> dict:
+    ''' Cadastra um novo serviço  '''
 
-@app.get("/new_vehicle")
-def add_vehicle(token:str, db_name:str) -> None:
-    return
+    data = decrypt(pipe)
 
+    if not is_valid( data["token"] ):
+      raise HTTPException(status_code=401, detail="Token inválido!")
+
+    insert_command = f"""
+      INSERT INTO gic_servicos (tipo_servico, valor_servico)
+      VALUES ("{data['tipo_servico']}", {data['valor_servico']})
+    """
+    safe_execute(data['db_name'], command=insert_command)
+
+    return {"status_code":200, "message":"Novo serviço cadastrado!"}
 #-------------------------------------------------------------------------
